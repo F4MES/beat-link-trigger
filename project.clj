@@ -48,9 +48,11 @@
 
   :profiles {:dev     {:repl-options {:init-ns beat-link-trigger.core
                                       :welcome (println "beat-link-trigger loaded.")}
-                       :jvm-opts     ["-XX:-OmitStackTraceInFastThrow"]}
+                       :jvm-opts     ["-XX:-OmitStackTraceInFastThrow"
+                                      "-XX:+UseZGC"]}
              :uberjar {:aot      :all
-                       :jvm-opts ["-Djava.awt.headless=true"]}}
+                       :jvm-opts ["-Djava.awt.headless=true"
+                                  "-XX:+UseZGC"]}}
 
   :main beat-link-trigger.BeatLinkTrigger
   :uberjar-name "beat-link-trigger.jar"
