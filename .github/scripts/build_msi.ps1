@@ -33,7 +33,7 @@ else
 jpackage --name "$env:blt_name" --input .\Input --add-modules "$env:blt_java_modules" `
  --icon ".\.github\resources\BeatLink.ico" `
  --main-jar beat-link-trigger.jar `
- --java-options "-Djava.net.preferIPv4Stack=true" `
+ --java-options "-Djava.net.preferIPv4Stack=true -XX:+UseZGC" `
  --type app-image `
  --description "$env:blt_description" --copyright "$env:blt_copyright" --vendor "$env:blt_vendor" `
  --app-version "$env:build_version"

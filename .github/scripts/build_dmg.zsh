@@ -49,7 +49,7 @@ if  [ "$IDENTITY_PASSPHRASE" != "" ]; then
     rm -rf jar_tmp
 
     # Run jpackage to build the native application as a code signed disk image
-    jpackage --name "$blt_name" --input Input --add-modules "$blt_java_modules" \
+    jpackage --name "$blt_name" --input Input --add-modules "$blt_java_modules" --java-options "-XX:+UseZGC" \
              --icon .github/resources/BeatLink.icns --main-jar beat-link-trigger.jar \
              --description "$blt_description" --copyright "$blt_copyright" --vendor "$blt_vendor" \
              --mac-package-identifier "org.deepsymmetry.beat-link-trigger" --app-version "$build_version" \
