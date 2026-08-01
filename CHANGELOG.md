@@ -27,6 +27,7 @@ This change log follows the conventions of
   Once that compiler bug is fixed, we can go back to compiling under Java 21.
 - Brand new BLT installs, or upgrades from versions prior to 8 are supposed to start in a dark UI theme, but are actually showing the light theme (even though the Settings window says dark).
 - A small error in the Beat Link library was causing an exception to be reported when asking the TimeFinder for position information about hardware other than the CDJ-3000 until a track's beat grid was available.
+- A fixed version of beat-carabiner is used which avoids some unnecessary timeline adjustments.
 
 
 ## [8.0.0] - 2025-07-21
