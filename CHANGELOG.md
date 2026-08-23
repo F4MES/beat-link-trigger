@@ -8,12 +8,12 @@ This change log follows the conventions of
 
 ### Added
 
+- The beat-carabiner library now allows the Ableton Link timeline to be nudged by tempo to keep it close to the CDJs for small adjustments, which can provide a much cleaner-sounding tracking. This still needs to be documented.
 - The Beat Link library now allows packets to be ignored by device name, so for example you can try to coexist with ShowKontrol by adding the following code to your Global Setup Expression:
 
         (.addIgnoredDeviceName device-finder "TCS-SHOWKONTROL")
 
   Note that we don't test against this combination and still recommend that you choose to work with either Beat Link Trigger or ShowKontrol, but not both.
-
 
 ### Changed
 
