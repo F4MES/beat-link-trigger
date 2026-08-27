@@ -382,6 +382,11 @@ BLT also adds some helper functions you can use to switch between important expr
 * `(in-core-ns)`: Switch to the namespace in which BLT places you when you run it from source, which includes functions like `(start)` which tell it to start up.
 
 All of these namespaces include Clojure’s developer-friendly functions, and the above three special BLT namespace-switching functions to make it easy to jump around.
+
+But be careful if you are inside a show's namespace when you close the show! That deletes the namespace, which means none of the friendly functions you were relying on, including `(in-core-ns)` exist for your REPL any more!
+Reopening the show won't help either, because that creates a new unique namespace for the new instance.
+You will need to use an Emacs function like `cider-repl-set-ns` (normally bound to kbd:C-c M-n[]) to switch back to `beat-link-trigger.core`.
+If you're using Cursive, you may need to close your remote REPL connection and start a new one.
 ====
 
 The https://clojure.org/reference/repl_and_main[Clojure documentation] mentions some of the things you can do at the REPL (although you can ignore the parts that talk about how to start Clojure; Beat Link Trigger has already done that for you).
