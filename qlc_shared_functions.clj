@@ -91,21 +91,24 @@
 
 ;; ---------------------------------------------------------------------------
 ;;  Reading bass energy out of rekordbox's own analysis.
-;;  The API differs between beat-link versions and between three-band and RGB
-;;  analyses, so each strategy is tried in turn instead of assuming one.
+;;
+;;  The API is segmentHeight(segment, scale) / segmentColor(segment, scale),
+;;  where the second argument is how many segments to average into one pixel
+;;  column - NOT a frequency band. There is no band accessor at all.
+;;
+;;  Colour (NXS2) waveforms encode frequency content in the colour channels, and
+;;  the red channel tracks the low end, so there we get a genuine bass reading.
+;;  Monochrome blue waveforms only carry overall amplitude, so on those this
+;;  cannot tell a bass drop from a general drop in energy - the breaks it finds
+;;  will be less precise. The isColor field tells us which one we have.
 ;; ---------------------------------------------------------------------------
 
 (defn qlc-segment-bass [detail segment]
-  (or
-    (try (let [h (.segmentHeight detail (int segment) (int 0))]
-           (when (number? h) (/ (double h) 31.0)))
-         (catch Throwable _ nil))
-    (try (let [c (.segmentColor detail (int segment) (int 1))]
-           (/ (double (.getRed c)) 255.0))
-         (catch Throwable _ nil))
-    (try (/ (double (.segmentHeight detail (int segment) (int 1))) 31.0)
-         (catch Throwable _ 0.0))
-    0.0))
+  (try
+    (if (.isColor detail)
+      (/ (double (.getRed (.segmentColor detail (int segment) (int 1)))) 255.0)
+      (/ (double (.segmentHeight detail (int segment) (int 1))) 31.0))
+    (catch Throwable _ 0.0)))
 
 (defn qlc-bass-at-beat [detail grid beat]
   (try
@@ -196,9 +199,14 @@
                       :title    (qlc-title player)
                       :bpm      0.0        ; QLC+ takes live tempo from Link
                       :beats    (count curve)
+                      ;; exact track length - beat-link knows the half-frame count
+                      :duration (try (.getTotalTime detail) (catch Throwable _ 0))
                       :waveform (mapv #(int (* 255 (max 0.0 (min 1.0 %)))) curve)
                       :markers  (qlc-build-markers curve)})
-          (timbre/info "QLC+ track sent -" (count curve) "beats")
+          (timbre/info "QLC+ track sent -" (count curve) "beats,"
+                       (if (.isColor detail)
+                         "colour waveform (real bass reading)"
+                         "monochrome waveform (amplitude only)"))
           true)
         (do (timbre/info "Waveform/beat grid not ready for player" player)
             false)))
@@ -222,9 +230,14 @@
       (when (qlc-send-track! player)
         (swap! qlc-last-track assoc player sig)))))
 
-(defn qlc-tracked-update! [player beat playing?]
-  (qlc-maybe-send-track! player)
-  (qlc-send-position! beat playing?))
+(defn qlc-tracked-update!
+  "Two arities so the wiring does not depend on a binding that may or may not be
+  offered in your expression's help text. Pass the playing flag if you have one."
+  ([player beat]
+   (qlc-tracked-update! player beat true))
+  ([player beat playing?]
+   (qlc-maybe-send-track! player)
+   (qlc-send-position! beat playing?)))
 
 (defn qlc-beat! [beat]
   (qlc-send-position! beat true))
@@ -232,11 +245,24 @@
 ;; ---------------------------------------------------------------------------
 ;;  WIRING - two one-liners, that's all
 ;;
-;;    Trigger -> Beat Expression:
+;;  This file goes in:  Triggers window  ->  Triggers  ->  Edit Shared Functions
+;;
+;;  The two expressions below live on a single trigger, reached by
+;;  right-clicking (or control-clicking) that trigger's row to open its context
+;;  menu. Set the trigger's Watch menu to Master Player.
+;;
+;;    Beat Expression:
 ;;      (qlc-beat! beat-number)
 ;;
-;;    Trigger -> Tracked Update Expression:
-;;      (qlc-tracked-update! device-number beat-number playing?)
+;;    Tracked Update Expression:
+;;      (qlc-tracked-update! device-number beat-number)
+;;
+;;  Leave the trigger's Enabled menu at Never and its Message menu at Custom:
+;;  we only want our own code to run, not MIDI on play/stop.
+;;
+;;  (If the Tracked Update help text lists a playing flag, you can pass it as a
+;;  third argument to get an accurate PLAYING/PAUSED readout in QLC+. Without
+;;  it the readout simply always says playing, which is harmless.)
 ;;
 ;;  Tracked Update is the sync authority. When the DJ jumps to a hot cue or
 ;;  starts exactly on a beat, the beat packet is sometimes missed; the tracked
